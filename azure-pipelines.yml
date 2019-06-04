@@ -6,7 +6,7 @@ pool:
 
 steps:
 - script: |
-    VERSION=$(docker run -it --rm nodered/node-red-docker:slim cat node_modules/node-red/package.json | grep '"version":' | awk -F \" '{ print $4 }')
+    VERSION=$(docker run --rm nodered/node-red-docker:slim cat node_modules/node-red/package.json | grep '"version":' | awk -F \" '{ print $4 }')
     echo "##vso[task.setvariable variable=version]$VERSION"
   displayName: 'Read version number from container'  
 
