@@ -4,7 +4,11 @@ USER root
 
 RUN apk update && \
     apk add --no-cache --virtual .build-deps git python make && \
-    npm i node-red/node-red-dashboard \
+    npm install -g npm && \
+    npm i request-promise \ 
+        node-red-contrib-redis \
+        node-red-node-mongodb \
+        node-red/node-red-dashboard \
         node-red-contrib-dashboard-bar-chart-data \
         node-red-contrib-ui-level \
         @clysema/node-red-contrib-ui-week-schedule \
@@ -33,3 +37,7 @@ RUN apk update && \
     rm -rf node_modules/@node-red/nodes/core/io/32* && \
     apk del .build-deps && \
     rm -rf /var/apk
+
+#USER node-red
+
+COPY settings.js /data/settings.js
