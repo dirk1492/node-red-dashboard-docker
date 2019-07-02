@@ -7,7 +7,6 @@ RUN apk update && \
     npm install -g npm && \
     npm i request-promise \ 
         node-red-contrib-redis \
-        node-red-node-mongodb \
         node-red/node-red-dashboard \
         node-red-contrib-dashboard-bar-chart-data \
         node-red-contrib-ui-level \
@@ -31,7 +30,7 @@ RUN apk update && \
         node-red-contrib-signal-interval \
         node-red-contrib-map \
         node-red-contrib-influxdb \
-        node-red-contrib-storage-mongo && \
+        node-red-contrib-mongodb3 && \
     rm -rf node_modules/@node-red/nodes/core/hardware/* && \
     rm -rf node_modules/@node-red/nodes/core/io/31* && \
     rm -rf node_modules/@node-red/nodes/core/io/32* && \
