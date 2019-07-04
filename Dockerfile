@@ -7,6 +7,8 @@ RUN apk update && \
     npm install -g npm && \
     npm i request-promise \ 
         node-red-contrib-redis \
+        node-red-contrib-wait-paths \
+        node-red-contrib-cache \
         node-red/node-red-dashboard \
         node-red-contrib-dashboard-bar-chart-data \
         node-red-contrib-ui-level \
