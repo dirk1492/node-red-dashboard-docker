@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: consul
+    component: server
+  name: consul-ui
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: consul
+      component: server
+  serviceName: consul
+  template:
+    metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "false"
+      labels:
+        app: consul
+        component: server
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - consul
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - args:
+        - agent
+        - -ui
+        - -advertise=$(POD_IP)
+        - -config-file=/etc/consul/config/server.json
+        - -encrypt=$(GOSSIP_ENCRYPTION_KEY)
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: GOSSIP_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              key: gossip-encryption-key
+              name: consul
+        image: consul:1.5.2
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - consul leave
+        name: consul
+        ports:
+        - containerPort: 8500
+          name: ui-port
+          protocol: TCP
+        - containerPort: 8400
+          name: alt-port
+          protocol: TCP
+        - containerPort: 53
+          name: udp-port
+          protocol: TCP
+        - containerPort: 8443
+          name: https-port
+          protocol: TCP
+        - containerPort: 8080
+          name: http-port
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan
+          protocol: TCP
+        - containerPort: 8302
+          name: serfwan
+          protocol: TCP
+        - containerPort: 8600
+          name: consuldns
+          protocol: TCP
+        - containerPort: 8300
+          name: server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /consul/data
+          name: data
+        - mountPath: /etc/consul/config
+          name: config
+        - mountPath: /etc/tls
+          name: tls
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+      serviceAccount: consul
+      serviceAccountName: consul
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: consul
+        name: config
+      - name: tls
+        secret:
+          defaultMode: 420
+          secretName: consul
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      dataSource: null
+      resources:
+        requests:
+          storage: 1Gi
+      volumeMode: Filesystem
+      storageClassName: azurefile

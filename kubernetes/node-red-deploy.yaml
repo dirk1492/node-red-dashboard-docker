@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: node-red
+  name: node-red
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-red
+  template:
+    metadata:
+      labels:
+        app: node-red
+    spec:
+      containers:
+      - image: dil001/node-red-dashboard:0.20.6
+        imagePullPolicy: IfNotPresent
+        name: node-red-docker
+        volumeMounts:
+        - mountPath: /data
+          name: node-red-vol
+      volumes:
+      - name: node-red-vol
+        persistentVolumeClaim:
+          claimName: red-node-persistent-storage-0

@@ -1,0 +1,184 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    consul.hashicorp.com/connect-inject: "false"
+  creationTimestamp: "2019-07-08T00:56:18Z"
+  generateName: consul-
+  labels:
+    app: consul
+    component: server
+    controller-revision-hash: consul-5544b786b5
+    statefulset.kubernetes.io/pod-name: consul-0
+  name: consul-0
+  namespace: traefik
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: StatefulSet
+    name: consul
+    uid: b40072d7-a11a-11e9-8ae7-723bdedbcbeb
+  resourceVersion: "13050019"
+  selfLink: /api/v1/namespaces/traefik/pods/consul-0
+  uid: 319f527b-a11b-11e9-8ae7-723bdedbcbeb
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - consul
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - args:
+    - agent
+    - -advertise=$(POD_IP)
+    - -bootstrap-expect=3
+    - -config-file=/etc/consul/config/server.json
+    - -encrypt=$(GOSSIP_ENCRYPTION_KEY)
+    env:
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.podIP
+    - name: GOSSIP_ENCRYPTION_KEY
+      valueFrom:
+        secretKeyRef:
+          key: gossip-encryption-key
+          name: consul
+    - name: KUBERNETES_PORT_443_TCP_ADDR
+      value: k003-k002-e9e363-5bec7141.hcp.eastus.azmk8s.io
+    - name: KUBERNETES_PORT
+      value: tcp://k003-k002-e9e363-5bec7141.hcp.eastus.azmk8s.io:443
+    - name: KUBERNETES_PORT_443_TCP
+      value: tcp://k003-k002-e9e363-5bec7141.hcp.eastus.azmk8s.io:443
+    - name: KUBERNETES_SERVICE_HOST
+      value: k003-k002-e9e363-5bec7141.hcp.eastus.azmk8s.io
+    image: consul:1.5.2
+    imagePullPolicy: IfNotPresent
+    lifecycle:
+      preStop:
+        exec:
+          command:
+          - /bin/sh
+          - -c
+          - consul leave
+    name: consul
+    ports:
+    - containerPort: 8500
+      name: ui-port
+      protocol: TCP
+    - containerPort: 8400
+      name: alt-port
+      protocol: TCP
+    - containerPort: 53
+      name: udp-port
+      protocol: TCP
+    - containerPort: 8443
+      name: https-port
+      protocol: TCP
+    - containerPort: 8080
+      name: http-port
+      protocol: TCP
+    - containerPort: 8301
+      name: serflan
+      protocol: TCP
+    - containerPort: 8302
+      name: serfwan
+      protocol: TCP
+    - containerPort: 8600
+      name: consuldns
+      protocol: TCP
+    - containerPort: 8300
+      name: server
+      protocol: TCP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /consul/data
+      name: data
+    - mountPath: /etc/consul/config
+      name: config
+    - mountPath: /etc/tls
+      name: tls
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: consul-token-hq5lr
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostname: consul-0
+  nodeName: aks-nodepool1-42651666-0
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    fsGroup: 1000
+  serviceAccount: consul
+  serviceAccountName: consul
+  subdomain: consul
+  terminationGracePeriodSeconds: 10
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: data-consul-0
+  - configMap:
+      defaultMode: 420
+      name: consul
+    name: config
+  - name: tls
+    secret:
+      defaultMode: 420
+      secretName: consul
+  - name: consul-token-hq5lr
+    secret:
+      defaultMode: 420
+      secretName: consul-token-hq5lr
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2019-07-08T00:56:18Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2019-07-08T00:56:23Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2019-07-08T00:56:23Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2019-07-08T00:56:18Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://83bdfe64e3c42c25426e7382b41076cb3cd1f14efa92c823732e3bbdeec317de
+    image: consul:1.5.2
+    imageID: docker-pullable://consul@sha256:b31edc821d5e3deae8ce9f9a2070dc3fbaa72f5e1746a85a91ebe551ed8fb17f
+    lastState: {}
+    name: consul
+    ready: true
+    restartCount: 0
+    state:
+      running:
+        startedAt: "2019-07-08T00:56:22Z"
+  hostIP: 10.240.0.4
+  phase: Running
+  podIP: 10.244.1.36
+  qosClass: BestEffort
+  startTime: "2019-07-08T00:56:18Z"

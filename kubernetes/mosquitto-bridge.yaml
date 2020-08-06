@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: mosquitto-bridge
+  name: mosquitto-bridge
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mosquitto-bridge
+  serviceName: mosquitto-bridge
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: mosquitto-bridge
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mosquitto-bridge
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - env:
+        - name: BACKEND_NODES
+          value: mosquitto-0.mosquitto-headless mosquitto-1.mosquitto-headless
+        image: dil001/mosquitto
+        imagePullPolicy: Always
+        name: mosquitto-bridge
+        ports:
+        - containerPort: 1883
+          name: mqtt
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /mosquitto/config/mosquitto.conf.in
+          name: config-volume
+          subPath: mosquitto-bridge.conf
+        - mountPath: /mosquitto/config/ca.crt
+          name: ca
+          subPath: ca.crt
+        - mountPath: /mosquitto/config/server.crt
+          name: tls
+          subPath: tls.crt
+        - mountPath: /mosquitto/config/server.key
+          name: tls
+          subPath: tls.key
+        - mountPath: /mosquitto/config/password.txt
+          name: password
+          subPath: passwd.txt
+        - mountPath: /mosquitto/data
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1883
+        runAsUser: 1883
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: mosquitto
+        name: config-volume
+      - name: ca
+        secret:
+          defaultMode: 420
+          secretName: mosquitto-ca
+      - name: tls
+        secret:
+          defaultMode: 420
+          secretName: mq.lembke.nz
+      - name: password
+        secret:
+          defaultMode: 420
+          secretName: password
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      dataSource: null
+      resources:
+        requests:
+          storage: 1Gi
+      volumeMode: Filesystem
+      storageClassName: azurefile
+    status:
+      phase: Pending
